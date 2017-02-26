@@ -26,7 +26,7 @@ Text can be recognised by the sudden change in intensity level with respect to t
 
 But the trick lies in differentiating the X & Y axes from the graph's curve - use Google, StackOverflow and OpenCV tutorials to the maximum extent.
 
-It may be tough to get all the readings accurately. but it's fine.
+It may be tough to get all the readings accurately. Keep trying, submit your best attempt.
 
 Good luck!
 
@@ -34,16 +34,16 @@ Good luck!
 
 Coordinates of the origin of the graph should not be hard-coded specific to a particular image. It should work on any similar graph image with 2 perpendicular lines.
 
-Variables like cutoff text density can be hard-coded, but it'd be better if the cutoff is dynamically decided.
+Variables like cutoff text density can be hard-coded. Bonus points for deciding the cutoff intensity dynamically.
 
 ### Submission Guidelines
 
-(1) Fork this repository on GitHub.
+1. Fork this repository on GitHub.
 
-(2) Clone your fork with `git clone` statement.
+2. Clone your fork with `git clone` statement.
 
-(3) Make your local changes, in a sub-directory (say, `graph-detect/<username>/`).
+3. Make your local changes, in the sub-directory: `graph-detect/<username>/` (Here, `username` is your Github username)
 
-(4) Push these changes to your fork with `git add`, `git commit` and `git push` statements.
+4. Push these changes to your fork with `git add`, `git commit` and `git push` statements.
 
-(5) Create a Pull Request to this repository by comparing across forks with your fork.
+5. Create a Pull Request to this repository by comparing across forks with your fork.
