@@ -12,15 +12,15 @@
 using namespace std;
 using namespace cv;
 char  *INPUT_FILE;
-Point findIntersection(Point p1,Point p2,Point p3,Point p4)
+Point findIntersection(Point p1,Point p2,Point p3,Point p4) //finds and returns intersection point between two lines
 {
   float xD1,yD1,xD2,yD2,xD3,yD3;
   float dot,deg,len1,len2;
   float segmentLen1,segmentLen2;
   float ua,ub,div;
-  Point def;
+  Point def;  //for default in case of invalid intersection
   def.x=0;
-  def.y=INT_MAX;
+  def.y=INT_MAX;  
   // calculate differences
   xD1=p2.x-p1.x;
   xD2=p4.x-p3.x;
@@ -38,7 +38,7 @@ Point findIntersection(Point p1,Point p2,Point p3,Point p4)
   deg=dot/(len1*len2);
 
   // if abs(angle)==1 then the lines are parallell,
-  // so no intersection is possible
+  // so no intersection is possible,return default
   if(abs(deg)==1)
     return def;
 
@@ -73,7 +73,7 @@ Point findIntersection(Point p1,Point p2,Point p3,Point p4)
   // the lenghts of the two lines the point is actually
   // on the line segment.
 
-  // if the point isn’t on the line, return null
+  // if the point is on the line, return default
   if(abs(len1-segmentLen1)>0.01 || abs(len2-segmentLen2)>0.01)
     return def;
 
@@ -81,7 +81,7 @@ Point findIntersection(Point p1,Point p2,Point p3,Point p4)
   return pt;
 }
 
-float calc_dist(Point a,Point b)
+float calc_dist(Point a,Point b) //calculates the distance between two points
 {
   float ret=sqrt((a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y));
   return ret;
@@ -94,8 +94,8 @@ std::pair <int,int> find_origin()
   Mat odst,odst2;
   
   Canny(src,odst,50,200,3);
-  imshow("after canny ",odst);
-  waitKey(100);
+
+  
   cvtColor(odst,odst2,CV_GRAY2BGR);
   vector<Vec4i> lines;
   vector<Vec2f> lines2;
@@ -170,7 +170,7 @@ std::pair <int,int> find_origin()
   t[2]=255;
   for(int i=0;i<o_store.size();i++)
     {
-      cout<<o_store[i].x<<","<<o_store[i].y<<endl;
+
       if(o_store[i].y<odst2.rows && o_store[i].x<odst2.cols)
 	odst2.at<Vec3b>(o_store[i].y,o_store[i].x)= t;
     }
@@ -192,8 +192,7 @@ std::pair <int,int> find_origin()
 	    }
 	}
     }
-  imshow("lines",odst2);
-  waitKey(1000);
+
   return ret;
 
 }
@@ -205,45 +204,42 @@ int main(int argc, char** argv)
 
   Mat large = imread(INPUT_FILE);
   Mat rgb=large;
-  // downsample and use it for processing
-  //pyrDown(large, rgb);
+
+  
   Mat small;
   cvtColor(rgb, small, CV_BGR2GRAY);
   
   // morphological gradient
-  Mat grad;
-  Mat morphKernel = getStructuringElement(MORPH_ELLIPSE, Size(3,3));
-  //Mat morphKernel = getStructuringElement(MORPH_RECT, Size(3, 3));
+  Mat grad,grad2;
+  Mat morphKernel = getStructuringElement(MORPH_CROSS, Size(3,3));
+
 
 
   morphologyEx(small, grad, MORPH_GRADIENT, morphKernel);
-  //imshow("gradient",grad);
-  //waitKey(30000);
+  
+  imshow("gradient",grad);
+  waitKey(100);
+  
   
   // binarize
   Mat bw;
-  //threshold(grad, bw, 0.0, 255.0, THRESH_BINARY | THRESH_OTSU);
+
   threshold(grad, bw,125, 255.0, THRESH_BINARY);
-  
-  //imshow("bw",bw);
-  //waitKey(30000);
-  
+    
   // connect horizontally oriented regions
   Mat connected;
   morphKernel = getStructuringElement(MORPH_CROSS, Size(2, 2));
   morphologyEx(bw, connected, MORPH_CLOSE, morphKernel);
-  
-  //connected=bw;
-  
-  //imshow("connected",connected);
-  //waitKey(30000);
-  
+    
+ 
   // find contours
   Mat mask = Mat::zeros(bw.size(), CV_8UC1);
   vector<vector<Point > > contours;
   vector<Vec4i> hierarchy;
   
   findContours(connected, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE, Point(0, 0));
+  imshow("connected",connected);
+  waitKey(200);
   
   // filter contours
   for(int idx = 0; idx >= 0; idx = hierarchy[idx][0])
@@ -256,7 +252,7 @@ int main(int argc, char** argv)
       // ratio of non-zero pixels in the filled region
       double r = (double)countNonZero(maskROI)/(rect.width*rect.height);
 
-      if (r > .25 /* assume at least 45% of the area is filled if it contains text */
+      if (r > .20 /* assume at least 45% of the area is filled if it contains text */
 	              &&
 	  (rect.height > 3 && rect.width > 3) /* constraints on region size */
 	  /* these two conditions alone are not very robust. better to use something 
@@ -264,23 +260,18 @@ int main(int argc, char** argv)
 	  && rect.height*rect.width<0.2*(rgb.cols*rgb.rows) )
 	{
 	  if(rect.x<origin.second || rect.y>origin.first)
-	    rectangle(rgb, rect, Scalar(0, 255, 0), 2);
+	    rectangle(rgb, rect, Scalar(0, 255, 0), 1);
 	}
     }
 
-  Vec3b t;
-  t[0]=0;
-  t[1]=0;
-  t[2]=255;
   Point cent;
   cent.x=origin.second;
   cent.y=origin.first;
-  rgb.at<Vec3b>(origin.first,origin.second)=t;
   
   circle(rgb,cent,3,Scalar(0,0,255),2,8,0);
   
   imwrite(OUTPUT_FOLDER_PATH + string("rgb.jpg"), rgb);
-  cout<<endl<<origin.first<<","<<origin.second<<endl;
+  cout<<endl<<"detected origin (x,y) :"<<origin.second<<","<<origin.first<<endl;
   imshow("output",rgb);
   waitKey(0);
   return 0;
