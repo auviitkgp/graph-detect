@@ -94,12 +94,35 @@ std::pair <int,int> find_origin()
   Mat odst,odst2;
   
   Canny(src,odst,50,200,3);
+  imshow("after canny ",odst);
+  waitKey(100);
   cvtColor(odst,odst2,CV_GRAY2BGR);
   vector<Vec4i> lines;
+  vector<Vec2f> lines2;
   
-  HoughLinesP(odst,lines,1,CV_PI/180,100,150,10);
 
+  HoughLines(odst,lines2,0.25,CV_PI/180,120,0,0);
+  
   vector<Point > o_store;
+
+  for(size_t i=0;i<lines2.size();i++)
+    {
+      float rho =lines2[i][0] ,theta=lines2[i][1];
+      Point pt1,pt2;
+      double a =cos(theta),b=sin(theta);
+      double x0=a*rho,y0=b*rho;
+
+      pt1.x=cvRound(x0+1000*(-b));
+      pt1.y=cvRound(y0+1000*(a));
+
+      pt2.x = cvRound(x0 - 1000*(-b));
+      pt2.y = cvRound(y0 - 1000*(a));
+      
+      line(odst,pt1,pt2,255,1,CV_AA);
+      
+    }
+
+  HoughLinesP(odst,lines,1,CV_PI/180,100,120,10);
   
   if(lines.size()>0)
     {
@@ -111,6 +134,8 @@ std::pair <int,int> find_origin()
 	      Vec4i l=lines[i];
 	      Vec4i l2=lines[j];
 
+
+	      
 	      Point a;
 	      a.x=l[0];
 	      a.y=l[1];
@@ -132,12 +157,13 @@ std::pair <int,int> find_origin()
 	}
     }
 
-  for(size_t i=0;i<lines.size();i++)
+    for(size_t i=0;i<lines.size();i++)
     {
       Vec4i l=lines[i];
       line(odst2,Point(l[0],l[1]),Point(l[2],l[3]),Scalar(255,0,0),3,CV_AA);
       
     }
+  
   Vec3b t;
   t[0]=0;
   t[1]=0;
@@ -151,18 +177,23 @@ std::pair <int,int> find_origin()
   pair<int ,int > ret;
   float min_dist=INT_MAX;
   cout<<"min_dist"<<min_dist<<endl;
+  ret.first=0;
+  ret.second=odst2.cols;
   
   for(int i=0;i<o_store.size();i++)
     {
       if(min_dist>calc_dist(o_store[i],Point(0,odst2.rows)))
 	{
-	  min_dist=calc_dist(o_store[i],Point(0,odst2.rows));
-	  ret.first=o_store[i].y;
-	  ret.second=o_store[i].x;
+	  if(o_store[i].x >8 && o_store[i].x<(odst2.cols-8) && o_store[i].y<(odst2.rows-8) && o_store[i].y>8)
+	    {
+	      min_dist=calc_dist(o_store[i],Point(0,odst2.rows));
+	      ret.first=o_store[i].y;
+	      ret.second=o_store[i].x;
+	    }
 	}
     }
   imshow("lines",odst2);
-  waitKey(3000);
+  waitKey(1000);
   return ret;
 
 }
@@ -230,12 +261,24 @@ int main(int argc, char** argv)
 	  (rect.height > 3 && rect.width > 3) /* constraints on region size */
 	  /* these two conditions alone are not very robust. better to use something 
 	     like the number of significant peaks in a horizontal projection as a third condition */
-	  )
+	  && rect.height*rect.width<0.2*(rgb.cols*rgb.rows) )
 	{
-	   if(rect.x<origin.second || rect.y>origin.first)
+	  if(rect.x<origin.second || rect.y>origin.first)
 	    rectangle(rgb, rect, Scalar(0, 255, 0), 2);
 	}
     }
+
+  Vec3b t;
+  t[0]=0;
+  t[1]=0;
+  t[2]=255;
+  Point cent;
+  cent.x=origin.second;
+  cent.y=origin.first;
+  rgb.at<Vec3b>(origin.first,origin.second)=t;
+  
+  circle(rgb,cent,3,Scalar(0,0,255),2,8,0);
+  
   imwrite(OUTPUT_FOLDER_PATH + string("rgb.jpg"), rgb);
   cout<<endl<<origin.first<<","<<origin.second<<endl;
   imshow("output",rgb);
