@@ -6,7 +6,6 @@
 
 using namespace cv;
 using namespace std;
-RNG rng(12345);
 
  Mat src_gray;
 int thresh = 100;
@@ -30,7 +29,7 @@ void thresh_callback(int, void* )
    Mat drawing = Mat::zeros( threshold_output.size(), CV_8UC3 );
   for( size_t i = 0; i< contours.size(); i++ )
   {
-    Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+    Scalar color = Scalar(255,0,0);
     rectangle( a, boundRect[i].tl(), boundRect[i].br(), color, 2, 8, 0 );}
     namedWindow( "Contours", WINDOW_AUTOSIZE );
   imshow( "Contours", a );
