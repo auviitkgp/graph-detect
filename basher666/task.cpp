@@ -6,12 +6,12 @@
 #include <bits/stdc++.h>
 
 
-//#define INPUT_FILE              "../input.jpg"
 #define OUTPUT_FOLDER_PATH      string("")
 
 using namespace std;
 using namespace cv;
 char  *INPUT_FILE;
+
 Point findIntersection(Point p1,Point p2,Point p3,Point p4) //finds and returns intersection point between two lines
 {
   float xD1,yD1,xD2,yD2,xD3,yD3;
@@ -105,6 +105,7 @@ std::pair <int,int> find_origin()
   
   vector<Point > o_store;
 
+  //extends the incomplete lines completely
   for(size_t i=0;i<lines2.size();i++)
     {
       float rho =lines2[i][0] ,theta=lines2[i][1];
@@ -123,7 +124,9 @@ std::pair <int,int> find_origin()
     }
 
   HoughLinesP(odst,lines,1,CV_PI/180,100,120,10);
-  
+
+
+  //calculates valid intersection point between every pair of lines
   if(lines.size()>0)
     {
       Point tmp;
@@ -179,6 +182,8 @@ std::pair <int,int> find_origin()
   cout<<"min_dist"<<min_dist<<endl;
   ret.first=0;
   ret.second=odst2.cols;
+
+  //selects the intersection point which lies closest to the lower left corner of the image
   
   for(int i=0;i<o_store.size();i++)
     {
@@ -215,7 +220,7 @@ int main(int argc, char** argv)
 
 
 
-  morphologyEx(small, grad, MORPH_GRADIENT, morphKernel);
+  morphologyEx(small, grad, MORPH_GRADIENT, morphKernel); //does a morphological gradient operation
   
   imshow("gradient",grad);
   waitKey(100);
@@ -229,7 +234,7 @@ int main(int argc, char** argv)
   // connect horizontally oriented regions
   Mat connected;
   morphKernel = getStructuringElement(MORPH_CROSS, Size(2, 2));
-  morphologyEx(bw, connected, MORPH_CLOSE, morphKernel);
+  morphologyEx(bw, connected, MORPH_CLOSE, morphKernel); //does a closing operation
     
  
   // find contours
@@ -252,14 +257,9 @@ int main(int argc, char** argv)
       // ratio of non-zero pixels in the filled region
       double r = (double)countNonZero(maskROI)/(rect.width*rect.height);
 
-      if (r > .20 /* assume at least 45% of the area is filled if it contains text */
-	              &&
-	  (rect.height > 3 && rect.width > 3) /* constraints on region size */
-	  /* these two conditions alone are not very robust. better to use something 
-	     like the number of significant peaks in a horizontal projection as a third condition */
-	  && rect.height*rect.width<0.2*(rgb.cols*rgb.rows) )
+      if (r > .20 && (rect.height > 3 && rect.width > 3) && rect.height*rect.width<0.2*(rgb.cols*rgb.rows) ) //constraints on region size
 	{
-	  if(rect.x<origin.second || rect.y>origin.first)
+	  if(rect.x<origin.second || rect.y>origin.first) //checks if top left corner of rectangle is in left or under the origin
 	    rectangle(rgb, rect, Scalar(0, 255, 0), 1);
 	}
     }
@@ -268,7 +268,7 @@ int main(int argc, char** argv)
   cent.x=origin.second;
   cent.y=origin.first;
   
-  circle(rgb,cent,3,Scalar(0,0,255),2,8,0);
+  circle(rgb,cent,3,Scalar(0,0,255),2,8,0); //creates a circle around origin
   
   imwrite(OUTPUT_FOLDER_PATH + string("rgb.jpg"), rgb);
   cout<<endl<<"detected origin (x,y) :"<<origin.second<<","<<origin.first<<endl;
