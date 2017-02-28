@@ -6,4 +6,4 @@ This code utilizes the gradient based method mentioned in this [link](http://sta
 
 ###Running the code
 
-The code is in c++ and I used cmake to build the project. The code is run by './<executable_name> <path_to_image>' .
+The code is in c++ and I used cmake to build the project. The code is run by ./<executable_name> <path_to_image> .
